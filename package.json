@@ -1,0 +1,18 @@
+{
+  "name": "smart-dbin",
+  "version": "1.0.0",
+  "description": "Smart Dustbin",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "start-dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chinmaya Pati",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongodb": "^3.3.3",
+    "winston": "^3.2.1"
+  }
+}
