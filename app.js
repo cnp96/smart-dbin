@@ -1,7 +1,7 @@
+const logger = require("./logger")
 const express = require("express");
 const app = express();
-
-const logger = require("./logger")
+app.use(express.json())
 
 // DB
 const db = require("./db")
@@ -12,9 +12,13 @@ db.connect()
 // Routes
 const apiRoutes = require("./routes/api")
 app.use("/api", apiRoutes)
-app.use((err, req, res, next) => {
-  logger.error(err.message)
-  res.status(err.status).json(err)
+app.use(({ status, message }, req, res, next) => {
+  switch (status) {
+    case 500: message = "Internal sever error"; break;
+    case 503: message = "Service not available"; break;
+    default:
+  }
+  res.status(status).json({ status, message })
 })
 
 // Cleanup
