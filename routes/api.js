@@ -6,7 +6,7 @@ const db = require("../db")
  * MODEL
  * 
  * users
- *  - name, mobile, rewards, created_on, modified_on
+ *  - name, mobile, rewards
  * 
  * dustbin
  *  - name, otp, secret
