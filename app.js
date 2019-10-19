@@ -17,7 +17,7 @@ app.use(({ status, message }, req, res, next) => {
     case 503: message = "Service not available"; break;
     default:
   }
-  res.status(status).json({ status, message })
+  res.status(status || 500).json({ status, message })
 })
 
 // Cleanup

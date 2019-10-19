@@ -19,6 +19,8 @@ const validate = (params, payload) => {
   } else return null
 }
 
+const createOTP = () => parseInt(Math.random() * (9999 - 1000) + 1000)
+
 // Register a Dustbin
 router.post("/create/dustbin", (req, res, next) => {
   const params = ["name", "secret"];
@@ -31,7 +33,7 @@ router.post("/create/dustbin", (req, res, next) => {
       col.findOne({ name: payload.name })
         .then((findRes) => {
           if (findRes) {
-            next({ status: 400, message: "Dustbin already registered" })
+            next({ status: 400, message: "Dustbin already registered." })
           } else {
             col.insertOne(payload)
               .then(insRes => {
@@ -58,12 +60,10 @@ router.post("/create/otp", (req, res, next) => {
       col.findOne({ name: payload.dustbin })
         .then((findRes) => {
           if (findRes) {
-            // Create and send OTP
-            const otp = parseInt(Math.random() * (9999 - 1000) + 1000)
-            col.updateOne({ name: payload.dustbin }, { $set: { otp } }, { upsert: true })
+            col.updateOne({ name: payload.dustbin }, { $set: { otp: createOTP() } }, { upsert: true })
               .then(otpRes => {
                 if (!otpRes.result.ok) {
-                  throw new Error("Unable to generate OTP")
+                  throw new Error("Unable to generate OTP.")
                 } else {
                   // Send SMS to payload.mobile
                   res.json({
@@ -74,12 +74,34 @@ router.post("/create/otp", (req, res, next) => {
                   })
                 }
               })
-          } else next({ status: 400, message: "Invalid dustbin name" })
+          } else next({ status: 404, message: "Invalid dustbin name." })
         })
-    }).catch(() => next({ status: 503 }))
+    }).catch(() => next({ status: 500 }))
 })
 
 // Verify OTP
+router.get("/verify/otp/:dustbin/:otp", (req, res, next) => {
+  const params = ["dustbin", "otp"]
+  const payload = _.pick(req.params, params);
+  const _isInvalid = validate(params, payload)
+  if (_isInvalid) return next(_isInvalid)
+
+  db.getDustbinCollection()
+    .then(col => {
+      col.findOne({ name: payload.dustbin })
+        .then(dbinRes => {
+          if (!dbinRes) next({ status: 404, message: "Invalid dustbin name." })
+          else {
+            if (dbinRes.otp == payload.otp) {
+              res.json({ data: "OTP verified." })
+              col.updateOne({ _id: dbinRes._id }, { $set: { otp: createOTP() } }, { upsert: true })
+            } else {
+              next({ status: 403, message: "Invalid OTP." })
+            }
+          }
+        })
+    }).catch(() => next({ status: 500 }))
+})
 
 // Add/Update rewards
 
