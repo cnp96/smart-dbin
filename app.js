@@ -10,8 +10,7 @@ db.connect()
   .then(db.close)
 
 // Routes
-const apiRoutes = require("./routes/api")
-app.use("/api", apiRoutes)
+app.use("/api", require("./routes/api"))
 app.use(({ status, message }, req, res, next) => {
   switch (status) {
     case 500: message = "Internal sever error"; break;

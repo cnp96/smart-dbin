@@ -18,7 +18,7 @@ module.exports = function () {
     })
   })
 
-  process.on("unhandledRejection", (reason, promise) => {
-    logger.error("Caught unhandledRejection", reason)
-  })
+  // process.on("unhandledRejection", (reason, promise) => {
+  //   logger.error("Caught unhandledRejection", reason)
+  // })
 }
