@@ -10,8 +10,8 @@ app.use(morgan("dev"))
 app.use("/api", require("./routes/api"))
 app.use(({ status, message }, req, res, next) => {
   switch (status) {
-    case 500: message = "Internal sever error"; break;
-    case 503: message = "Service not available"; break;
+    case 500: message = message || "Internal sever error"; break;
+    case 503: message = message || "Service not available"; break;
     default:
   }
   res.status(status || 500).json({ status, message })

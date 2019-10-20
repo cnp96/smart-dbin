@@ -2,6 +2,7 @@ const router = require("express").Router()
 const _ = require("lodash")
 const db = require("../libs/db")
 const sms = require("../libs/sms")
+const logger = require("../libs/logger")
 
 /**
  * MODEL
@@ -10,7 +11,7 @@ const sms = require("../libs/sms")
  *  - name, mobile, rewards
  * 
  * dustbin
- *  - name, otp, secret
+ *  - name, otp, otpExpiry, secret
  * 
  */
 
@@ -18,6 +19,7 @@ const sms = require("../libs/sms")
 // Utils
 const validate = (params, payload) => {
   if (params.filter(p => !payload[p]).length) {
+    logger.error("Received parameters", Object.keys(payload))
     return { status: 400, message: `${params.join(", ")} are required parameters.` }
   } else return null
 }
@@ -60,35 +62,39 @@ router.post("/create/otp", async (req, res, next) => {
     const col = await db.getDustbinCollection()
     const findRes = await col.findOne({ name: payload.dustbin })
     if (findRes) {
-      if (findRes.otpExpiry > Date.now()) {
-        res.json({
-          data: {
-            dustbinName: payload.dustbin,
-            otp: findRes.otp
-          }
-        })
-      } else {
-        col.updateOne({ name: payload.dustbin },
-          { $set: { otp: createOTP(), otpExpiry: Date.now() + otpExpiry } },
+
+      // Generate OTP, if expired
+      let otp;
+      if (findRes.otpExpiry <= Date.now()) {
+        otp = createOTP();
+        const createOTPResp = await col.updateOne({ name: payload.dustbin },
+          { $set: { otp, otpExpiry: Date.now() + otpExpiry } },
           { upsert: true }
-        )
-          .then(otpRes => {
-            if (!otpRes.result.ok) {
-              throw new Error("Unable to generate OTP.")
-            } else {
-              // Send SMS to payload.mobile
-              sms.sendOTP([payload.mobile], otp)
-                .then(r => {
-                  res.json({
-                    data: {
-                      dustbinName: payload.dustbin,
-                      otp
-                    }
-                  })
-                }).catch(e => next({ status: 503, message: "Failed to send OTP. Please try again." }))
+        ).catch(e => {
+          logger.error("Create OTP error", e.message)
+          return next({ status: 503, message: "Failed to send OTP." })
+        })
+
+        if (!createOTPResp.result.ok) {
+          return next({ status: 503, message: "Failed to send OTP." })
+        }
+      } else {
+        otp = findRes.otp;
+      }
+
+      // Send OTP
+      sms.sendOTP([payload.mobile], otp)
+        .then(r => {
+          res.json({
+            data: {
+              dustbinName: payload.dustbin,
+              otp
             }
           })
-      }
+        }).catch(e => {
+          logger.error("OTP Send error", e)
+          next({ status: 503, message: "Failed to send OTP. Please try again." })
+        })
     } else next({ status: 404, message: "Invalid dustbin name." })
   }
   catch (e) { next({ status: 500 }) }
