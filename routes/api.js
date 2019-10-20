@@ -1,6 +1,7 @@
 const router = require("express").Router()
 const _ = require("lodash")
-const db = require("../db")
+const db = require("../libs/db")
+const sms = require("../libs/sms")
 
 /**
  * MODEL
@@ -61,12 +62,15 @@ router.post("/create/otp", async (req, res, next) => {
             throw new Error("Unable to generate OTP.")
           } else {
             // Send SMS to payload.mobile
-            res.json({
-              data: {
-                dustbinName: payload.dustbin,
-                otp
-              }
-            })
+            sms.sendOTP([payload.mobile], otp)
+              .then(r => {
+                res.json({
+                  data: {
+                    dustbinName: payload.dustbin,
+                    otp
+                  }
+                })
+              }).catch(e => next({ status: 503, message: "Failed to send OTP. Please try again." }))
           }
         })
     } else next({ status: 404, message: "Invalid dustbin name." })

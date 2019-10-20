@@ -1,5 +1,5 @@
-const db = require("./db")
-const logger = require("./logger")
+const db = require("./libs/db")
+const logger = require("./libs/logger")
 
 module.exports = function () {
   const signals = ["SIGTERM", "SIGINT"];

@@ -1,4 +1,4 @@
-const logger = require("./logger")
+const logger = require("./libs/logger")
 const express = require("express");
 const app = express();
 app.use(express.json())

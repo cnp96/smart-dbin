@@ -1,11 +1,11 @@
 const MongoClient = require('mongodb').MongoClient;
 
 // Connection URL
-const url = process.env.dbUrl || 'mongodb://admin:password1@ds137368.mlab.com:37368/smart-dustbin';
+const url = process.env.dbUrl;
 let connection;
 
 // Database Name
-const dbName = process.env.dbName || 'smart-dustbin';
+const dbName = process.env.dbName;
 
 // Methods
 const connect = function () {
