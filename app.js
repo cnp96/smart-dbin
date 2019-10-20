@@ -2,12 +2,17 @@ require('dotenv').config()
 const morgan = require('morgan')
 const logger = require('./libs/logger')
 const express = require('express')
+const path = require('path')
+
+// Middlewares
 const app = express()
 app.use(express.json())
 app.use(morgan('dev'))
+app.use(express.static(path.join(__dirname, 'static/build')))
 
 // Routes
 app.use('/api', require('./routes/api'))
+app.use('*', (req, res, next) => res.sendFile(path.join(__dirname, 'static/build/index.html')))
 app.use(({ status, message }, req, res, next) => {
   switch (status) {
     case 500: message = message || 'Internal sever error'; break
