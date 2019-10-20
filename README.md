@@ -5,6 +5,7 @@ https://smart-dbin.herokuapp.com
 # APIs
 
 1. (Register a dustbin) `POST /api/create/dustbin`
+    
     **Request**
     ```
     {
@@ -17,6 +18,7 @@ https://smart-dbin.herokuapp.com
     ```
 
 2. (Generate OTP) `POST /api/create/otp`
+    
     **Request**
     ```
     {
@@ -31,6 +33,7 @@ https://smart-dbin.herokuapp.com
 3.  (Verify OTP) `GET /api/verify/otp/:dustbin/:otp`
     
 4.  (Add/Update rewards) `POST /api/user/reward`
+    
     **Request**
     ```
     {

@@ -3,12 +3,6 @@ const express = require("express");
 const app = express();
 app.use(express.json())
 
-// DB
-const db = require("./db")
-db.connect()
-  .then(conn => logger.info("Connected to DB"))
-  .then(db.close)
-
 // Routes
 app.use("/api", require("./routes/api"))
 app.use(({ status, message }, req, res, next) => {

@@ -1,29 +1,25 @@
 const MongoClient = require('mongodb').MongoClient;
 
 // Connection URL
-const url = 'mongodb://admin:password1@ds137368.mlab.com:37368/smart-dustbin';
+const url = process.env.dbUrl || 'mongodb://admin:password1@ds137368.mlab.com:37368/smart-dustbin';
 let connection;
 
 // Database Name
-const dbName = 'smart-dustbin';
+const dbName = process.env.dbName || 'smart-dustbin';
 
 // Methods
 const connect = function () {
   return new Promise((resolve, reject) => {
     if (connection) {
-      console.log("Resolved DB connection from cache")
-      resolve(connection);
+      resolve(connection.db(dbName));
     }
     else {
-      MongoClient.connect(url, { useUnifiedTopology: true, useNewUrlParser: true }, function (err, client) {
-
-        if (err) reject(err)
-        else {
+      MongoClient.connect(url, { useUnifiedTopology: true, useNewUrlParser: true })
+        .then(client => {
           connection = client;
           const db = client.db(dbName);
           resolve(db);
-        }
-      });
+        }).catch(e => reject(e))
     }
   })
 }
