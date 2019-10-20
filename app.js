@@ -1,7 +1,10 @@
+require("dotenv").config()
+const morgan = require("morgan")
 const logger = require("./libs/logger")
 const express = require("express");
 const app = express();
 app.use(express.json())
+app.use(morgan("dev"))
 
 // Routes
 app.use("/api", require("./routes/api"))

@@ -14,6 +14,8 @@ const sms = require("../libs/sms")
  * 
  */
 
+
+// Utils
 const validate = (params, payload) => {
   if (params.filter(p => !payload[p]).length) {
     return { status: 400, message: `${params.join(", ")} are required parameters.` }
@@ -21,7 +23,9 @@ const validate = (params, payload) => {
 }
 
 const createOTP = () => parseInt(Math.random() * (9999 - 1000) + 1000)
+const otpExpiry = 60000 // 1 minute
 
+/** Routes */
 // Register a Dustbin
 router.post("/create/dustbin", async (req, res, next) => {
   const params = ["name", "secret"];
@@ -56,23 +60,35 @@ router.post("/create/otp", async (req, res, next) => {
     const col = await db.getDustbinCollection()
     const findRes = await col.findOne({ name: payload.dustbin })
     if (findRes) {
-      col.updateOne({ name: payload.dustbin }, { $set: { otp: createOTP() } }, { upsert: true })
-        .then(otpRes => {
-          if (!otpRes.result.ok) {
-            throw new Error("Unable to generate OTP.")
-          } else {
-            // Send SMS to payload.mobile
-            sms.sendOTP([payload.mobile], otp)
-              .then(r => {
-                res.json({
-                  data: {
-                    dustbinName: payload.dustbin,
-                    otp
-                  }
-                })
-              }).catch(e => next({ status: 503, message: "Failed to send OTP. Please try again." }))
+      if (findRes.otpExpiry > Date.now()) {
+        res.json({
+          data: {
+            dustbinName: payload.dustbin,
+            otp: findRes.otp
           }
         })
+      } else {
+        col.updateOne({ name: payload.dustbin },
+          { $set: { otp: createOTP(), otpExpiry: Date.now() + otpExpiry } },
+          { upsert: true }
+        )
+          .then(otpRes => {
+            if (!otpRes.result.ok) {
+              throw new Error("Unable to generate OTP.")
+            } else {
+              // Send SMS to payload.mobile
+              sms.sendOTP([payload.mobile], otp)
+                .then(r => {
+                  res.json({
+                    data: {
+                      dustbinName: payload.dustbin,
+                      otp
+                    }
+                  })
+                }).catch(e => next({ status: 503, message: "Failed to send OTP. Please try again." }))
+            }
+          })
+      }
     } else next({ status: 404, message: "Invalid dustbin name." })
   }
   catch (e) { next({ status: 500 }) }
@@ -92,7 +108,10 @@ router.get("/verify/otp/:dustbin/:otp", async (req, res, next) => {
     if (!dbinRes) next({ status: 404, message: "Invalid dustbin name." })
     else {
       if (dbinRes.otp == payload.otp) {
-        res.json({ data: "OTP verified." })
+        if (Date.now() < dbinRes.otpExpiry) {
+          next({ status: 403, message: "OTP has expired." })
+        }
+        else res.json({ data: "OTP verified." })
         col.updateOne({ _id: dbinRes._id }, { $set: { otp: createOTP() } }, { upsert: true })
       } else {
         next({ status: 403, message: "Invalid OTP." })
