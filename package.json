@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "start-dev": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "./node_modules/.bin/eslint --fix ."
   },
   "author": "Chinmaya Pati",
   "license": "ISC",
@@ -18,5 +19,13 @@
     "mongodb": "^3.3.3",
     "morgan": "^1.9.1",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.5.1",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
   }
 }

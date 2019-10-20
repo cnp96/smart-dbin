@@ -1,26 +1,25 @@
-const router = require("express").Router()
-const _ = require("lodash")
-const db = require("../libs/db")
-const sms = require("../libs/sms")
-const logger = require("../libs/logger")
+const router = require('express').Router()
+const _ = require('lodash')
+const db = require('../libs/db')
+const sms = require('../libs/sms')
+const logger = require('../libs/logger')
 
 /**
  * MODEL
- * 
+ *
  * users
  *  - name, mobile, rewards
- * 
+ *
  * dustbin
  *  - name, otp, otpExpiry, secret
- * 
+ *
  */
-
 
 // Utils
 const validate = (params, payload) => {
   if (params.filter(p => !payload[p]).length) {
-    logger.error("Received parameters", Object.keys(payload))
-    return { status: 400, message: `${params.join(", ")} are required parameters.` }
+    logger.error('Received parameters', Object.keys(payload))
+    return { status: 400, message: `${params.join(', ')} are required parameters.` }
   } else return null
 }
 
@@ -29,8 +28,8 @@ const otpExpiry = 60000 // 1 minute
 
 /** Routes */
 // Register a Dustbin
-router.post("/create/dustbin", async (req, res, next) => {
-  const params = ["name", "secret"];
+router.post('/create/dustbin', async (req, res, next) => {
+  const params = ['name', 'secret']
   const payload = _.pick(req.body, params)
   const _isInvalid = validate(params, payload)
   if (_isInvalid) return next(_isInvalid)
@@ -39,7 +38,7 @@ router.post("/create/dustbin", async (req, res, next) => {
     const col = await db.getDustbinCollection()
     const findRes = await col.findOne({ name: payload.name })
     if (findRes) {
-      next({ status: 400, message: "Dustbin already registered." })
+      next({ status: 400, message: 'Dustbin already registered.' })
     } else {
       const insRes = await col.insertOne(payload)
       if (insRes && insRes.result.ok) {
@@ -52,8 +51,8 @@ router.post("/create/dustbin", async (req, res, next) => {
 })
 
 // Generate OTP
-router.post("/create/otp", async (req, res, next) => {
-  const params = ["dustbin", "mobile"];
+router.post('/create/otp', async (req, res, next) => {
+  const params = ['dustbin', 'mobile']
   const payload = _.pick(req.body, params)
   const _isInvalid = validate(params, payload)
   if (_isInvalid) return next(_isInvalid)
@@ -62,24 +61,23 @@ router.post("/create/otp", async (req, res, next) => {
     const col = await db.getDustbinCollection()
     const findRes = await col.findOne({ name: payload.dustbin })
     if (findRes) {
-
       // Generate OTP, if expired
-      let otp;
+      let otp
       if (findRes.otpExpiry <= Date.now()) {
-        otp = createOTP();
+        otp = createOTP()
         const createOTPResp = await col.updateOne({ name: payload.dustbin },
           { $set: { otp, otpExpiry: Date.now() + otpExpiry } },
           { upsert: true }
         ).catch(e => {
-          logger.error("Create OTP error", e.message)
-          return next({ status: 503, message: "Failed to send OTP." })
+          logger.error('Create OTP error', e.message)
+          return next({ status: 503, message: 'Failed to send OTP.' })
         })
 
         if (!createOTPResp.result.ok) {
-          return next({ status: 503, message: "Failed to send OTP." })
+          return next({ status: 503, message: 'Failed to send OTP.' })
         }
       } else {
-        otp = findRes.otp;
+        otp = findRes.otp
       }
 
       // Send OTP
@@ -92,18 +90,17 @@ router.post("/create/otp", async (req, res, next) => {
             }
           })
         }).catch(e => {
-          logger.error("OTP Send error", e)
-          next({ status: 503, message: "Failed to send OTP. Please try again." })
+          logger.error('OTP Send error', e)
+          next({ status: 503, message: 'Failed to send OTP. Please try again.' })
         })
-    } else next({ status: 404, message: "Invalid dustbin name." })
-  }
-  catch (e) { next({ status: 500 }) }
+    } else next({ status: 404, message: 'Invalid dustbin name.' })
+  } catch (e) { next({ status: 500 }) }
 })
 
 // Verify OTP
-router.get("/verify/otp/:dustbin/:otp", async (req, res, next) => {
-  const params = ["dustbin", "otp"]
-  const payload = _.pick(req.params, params);
+router.get('/verify/otp/:dustbin/:otp', async (req, res, next) => {
+  const params = ['dustbin', 'otp']
+  const payload = _.pick(req.params, params)
   const _isInvalid = validate(params, payload)
   if (_isInvalid) return next(_isInvalid)
 
@@ -111,26 +108,24 @@ router.get("/verify/otp/:dustbin/:otp", async (req, res, next) => {
     const col = await db.getDustbinCollection()
 
     const dbinRes = await col.findOne({ name: payload.dustbin })
-    if (!dbinRes) next({ status: 404, message: "Invalid dustbin name." })
+    if (!dbinRes) next({ status: 404, message: 'Invalid dustbin name.' })
     else {
       if (dbinRes.otp == payload.otp) {
         if (Date.now() < dbinRes.otpExpiry) {
-          next({ status: 403, message: "OTP has expired." })
-        }
-        else res.json({ data: "OTP verified." })
+          next({ status: 403, message: 'OTP has expired.' })
+        } else res.json({ data: 'OTP verified.' })
         col.updateOne({ _id: dbinRes._id }, { $set: { otp: createOTP() } }, { upsert: true })
       } else {
-        next({ status: 403, message: "Invalid OTP." })
+        next({ status: 403, message: 'Invalid OTP.' })
       }
     }
-  }
-  catch (e) { next({ status: 500 }) }
+  } catch (e) { next({ status: 500 }) }
 })
 
 // Add/Update rewards
-router.post("/user/reward", async (req, res, next) => {
-  const params = ["mobile", "reward"]
-  const payload = _.pick(req.body, params);
+router.post('/user/reward', async (req, res, next) => {
+  const params = ['mobile', 'reward']
+  const payload = _.pick(req.body, params)
   const _isInvalid = validate(params, payload)
   if (_isInvalid) return next(_isInvalid)
 
@@ -141,8 +136,7 @@ router.post("/user/reward", async (req, res, next) => {
     )
 
     res.json(rwResp.value)
-  }
-  catch (e) { next({ status: 500 }) }
+  } catch (e) { next({ status: 500 }) }
 })
 
-module.exports = router;
+module.exports = router

@@ -1,18 +1,18 @@
-const db = require("./libs/db")
-const logger = require("./libs/logger")
+const db = require('./libs/db')
+const logger = require('./libs/logger')
 
 module.exports = function () {
-  const signals = ["SIGTERM", "SIGINT"];
+  const signals = ['SIGTERM', 'SIGINT']
   signals.forEach(s => {
     process.on(s, () => {
       console.log(s)
-      const close = db.close();
+      const close = db.close()
       if (close === 1) {
-        logger.info("DB connection closed");
+        logger.info('DB connection closed')
       } else if (close === -1) {
-        logger.info("No active connections");
+        logger.info('No active connections')
       } else {
-        logger.info("Error closing DB connection");
+        logger.info('Error closing DB connection')
       }
       process.exit()
     })
