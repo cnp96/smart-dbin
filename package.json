@@ -4,7 +4,7 @@
   "description": "Smart Dustbin",
   "main": "app.js",
   "scripts": {
-    "start": "cd ./static && npm install && npm run build && cd .. && node app.js",
+    "start": "node app.js && cd ./static && npm install && npm run build",
     "start-dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "./node_modules/.bin/eslint --fix ."
