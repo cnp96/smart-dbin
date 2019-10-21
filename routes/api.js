@@ -149,4 +149,24 @@ router.post('/user/reward', async (req, res, next) => {
   } catch (e) { next({ status: 500 }) }
 })
 
+// Fetch reward points
+router.get('/user/reward/:mobile', async (req, res, next) => {
+  const params = ['mobile']
+  const payload = _.pick(req.params, params)
+  const _isInvalid = validate(params, payload)
+  if (_isInvalid) return next(_isInvalid)
+
+  try {
+    const col = await db.getUsersCollection()
+    const user = await col.findOne({ mobile: payload.mobile })
+    if (!user) {
+      next({ status: 404, message: 'This mobile is not registered.' })
+    } else {
+      res.json(user)
+    }
+  } catch (e) {
+    next({ status: 500 })
+  }
+})
+
 module.exports = router
