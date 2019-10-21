@@ -48,7 +48,6 @@ class SendOTP extends React.Component<SendOTPProps, SendOTPState> {
   }
 
   _isValidMobile(mob: string) {
-    mob = mob.trim();
     return !isNaN(Number(mob)) && mob.length === 10;
   }
 
@@ -169,6 +168,7 @@ class SendOTP extends React.Component<SendOTPProps, SendOTPState> {
 
     return (
       <div className="form">
+        <h4>Register</h4>
         {alert.message && <Alert message={alert.message} type={alert.type} />}
         <div className="input-group mb-3">
           <input

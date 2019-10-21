@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Switch, Route, Redirect, Link } from "react-router-dom";
 import SendOTP from "./components/SendOTP";
+import CheckReward from "./components/CheckReward";
 
 export interface RoutesProps {}
 
@@ -26,6 +27,13 @@ const Routes: React.SFC<RoutesProps> = () => {
             >
               Create Account
             </Link>
+            <Link
+              to="/rewards"
+              className="ml-3 btn btn-success btn-lg"
+              role="button"
+            >
+              Check Rewards
+            </Link>
           </div>
         )}
       />
@@ -34,10 +42,16 @@ const Routes: React.SFC<RoutesProps> = () => {
         path="/verify"
         render={props => {
           const params = new URLSearchParams(props.location.search);
-          if (params.get("bin")) return <SendOTP />;
+          if (params.get("bin"))
+            return (
+              <>
+                <SendOTP /> <div className="divider"></div> <CheckReward />
+              </>
+            );
           else props.history.push("/");
         }}
       />
+      <Route exact path="/rewards" component={CheckReward} />
       <Redirect to="/" />
     </Switch>
   );
