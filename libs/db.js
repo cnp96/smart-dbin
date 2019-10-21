@@ -10,7 +10,7 @@ const dbName = process.env.dbName
 // Methods
 const connect = function () {
   return new Promise((resolve, reject) => {
-    if (connection) {
+    if (connection && connection.isConnected()) {
       resolve(connection.db(dbName))
     } else {
       MongoClient.connect(url, { useUnifiedTopology: true, useNewUrlParser: true })
@@ -25,7 +25,7 @@ const connect = function () {
 
 const getCollection = (colName) => {
   return new Promise((resolve, reject) => {
-    if (connection) {
+    if (connection && connection.isConnected()) {
       resolve(connection.db(dbName).collection(colName))
     } else {
       connect()
@@ -40,7 +40,7 @@ const getCollection = (colName) => {
 module.exports = {
   connect,
   close: function () {
-    if (connection) {
+    if (connection && connection.isConnected()) {
       try {
         connection.close()
         connection = null

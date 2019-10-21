@@ -86,7 +86,7 @@ router.post('/create/otp', async (req, res, next) => {
           res.json({
             data: {
               dustbinName: payload.dustbin,
-              otp
+              mobile: payload.mobile
             }
           })
         }).catch(e => {
@@ -98,8 +98,8 @@ router.post('/create/otp', async (req, res, next) => {
 })
 
 // Verify OTP
-router.get('/verify/otp/:dustbin/:otp', async (req, res, next) => {
-  const params = ['dustbin', 'otp']
+router.get('/verify/otp/:dustbin/:mobile/:otp', async (req, res, next) => {
+  const params = ['dustbin', 'otp', 'mobile']
   const payload = _.pick(req.params, params)
   const _isInvalid = validate(params, payload)
   if (_isInvalid) return next(_isInvalid)
@@ -111,9 +111,19 @@ router.get('/verify/otp/:dustbin/:otp', async (req, res, next) => {
     if (!dbinRes) next({ status: 404, message: 'Invalid dustbin name.' })
     else {
       if (dbinRes.otp == payload.otp) {
-        if (Date.now() < dbinRes.otpExpiry) {
+        if (dbinRes.otpExpiry < Date.now()) {
           next({ status: 403, message: 'OTP has expired.' })
-        } else res.json({ data: 'OTP verified.' })
+        } else {
+          res.json({ data: 'OTP verified.' })
+          try {
+            // Create user
+            const userCol = await db.getUsersCollection()
+            const findUser = await userCol.findOne({ mobile: payload.mobile })
+            if (!findUser || !findUser.result.ok) {
+              userCol.insertOne({ mobile: payload.mobile, reward: 0 })
+            }
+          } catch (e) { logger.error('Create user error', e) }
+        }
         col.updateOne({ _id: dbinRes._id }, { $set: { otp: createOTP() } }, { upsert: true })
       } else {
         next({ status: 403, message: 'Invalid OTP.' })
