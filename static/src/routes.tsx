@@ -22,14 +22,14 @@ const Routes: React.SFC<RoutesProps> = () => {
             </p>
             <Link
               to="/verify?bin=dustbin1"
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-md"
               role="button"
             >
               Create Account
             </Link>
             <Link
               to="/rewards"
-              className="ml-3 btn btn-success btn-lg"
+              className="ml-3 btn btn-success btn-md"
               role="button"
             >
               Check Rewards
