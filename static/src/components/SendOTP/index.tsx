@@ -168,7 +168,7 @@ class SendOTP extends React.Component<SendOTPProps, SendOTPState> {
 
     return (
       <div className="form">
-        <h4>Register</h4>
+        <h4>Verify Yourself</h4>
         {alert.message && <Alert message={alert.message} type={alert.type} />}
         <div className="input-group mb-3">
           <input

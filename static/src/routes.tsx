@@ -25,7 +25,7 @@ const Routes: React.SFC<RoutesProps> = () => {
               className="btn btn-primary btn-md"
               role="button"
             >
-              Create Account
+              Verify Yourself
             </Link>
             <Link
               to="/rewards"
