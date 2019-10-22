@@ -2,14 +2,14 @@ const { post } = require('axios')
 const endpoint = process.env.smsEndpoint
 const authkey = process.env.smsAuthKey
 
-const sendOTP = (mobiles, otp) => {
+const sendMsg = (mobiles, message, isPlainMsg) => {
   return post(endpoint, {
     sender: 'SMTBIN',
     route: '4',
     country: '91',
     sms: [
       {
-        message: `Please enter OTP ${otp} to open the dustbin.`,
+        message: isPlainMsg ? message : `Please enter OTP ${message} to open the dustbin.`,
         to: mobiles
       }
     ]
@@ -17,5 +17,5 @@ const sendOTP = (mobiles, otp) => {
 }
 
 module.exports = {
-  sendOTP
+  sendMsg
 }

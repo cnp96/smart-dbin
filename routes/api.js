@@ -81,7 +81,7 @@ router.post('/create/otp', async (req, res, next) => {
       }
 
       // Send OTP
-      sms.sendOTP([payload.mobile], otp)
+      sms.sendMsg([payload.mobile], otp)
         .then(r => {
           res.json({
             data: {
@@ -119,12 +119,28 @@ router.get('/verify/otp/:dustbin/:mobile/:otp', async (req, res, next) => {
             // Create user
             const userCol = await db.getUsersCollection()
             const findUser = await userCol.findOne({ mobile: payload.mobile })
-            if (!findUser || !findUser.result.ok) {
+            if (!findUser) {
               userCol.insertOne({ mobile: payload.mobile, reward: 0 })
+            } else {
+              // Update reward by 10 points
+              col.findOneAndUpdate({ _id: findUser._id }, { $inc: { reward: 10 } },
+                { upsert: true, returnOriginal: false })
+                .then(r => {
+                  logger.info(`Updated reward for ${findUser.mobile} is ${r.value.reward}`)
+                  sms.sendMsg([payload.mobile], `Your updated reward points is ${r.value.reward}`, true)
+                    .then(s => {
+                      logger.info(`Message sent - Reward update for ${payload.mobile} = ${r.value.reward}`)
+                    }).catch(e => {
+                      logger.error(`Message not sent - Reward update for ${payload.mobile}`, e)
+                    })
+                })
+                .catch(e => {
+                  logger.error(`Unable to update reward for ${findUser.mobile}`, e.message)
+                })
             }
           } catch (e) { logger.error('Create user error', e) }
         }
-        col.updateOne({ _id: dbinRes._id }, { $set: { otp: createOTP() } }, { upsert: true })
+        col.updateOne({ _id: dbinRes._id }, { $set: { otp: createOTP(), otpExpiry: Date.now() + otpExpiry } }, { upsert: true })
       } else {
         next({ status: 403, message: 'Invalid OTP.' })
       }
